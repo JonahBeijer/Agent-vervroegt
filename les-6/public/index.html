@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#244c42"><title>StudieKompas · Agent vervroegt</title><link rel="stylesheet" href="/style.css"><script type="module" src="/app.js"></script></head>
+<body>
+<aside class="sidebar">
+<a class="brand" href="/" aria-label="StudieKompas start"><span class="brand-icon">✳</span><span>StudieKompas<small>AGENT VERVROEGT</small></span></a>
+<div class="course-label">JOUW STUDIEWERKPLAATS</div>
+<button id="new-chat" class="new-chat"><span>＋</span> Nieuw gesprek</button>
+<nav class="lesson-nav" aria-label="Lesonderwerpen"><button data-prompt="Leg uit wat een agent onderscheidt van een taalmodel, volgens les 5."><span>05</span> Agents & tools <i>↗</i></button><button data-prompt="Hoe werkt checkpointer memory volgens les 6?"><span>06</span> Chat & geheugen <i>↗</i></button><button data-prompt="Leg de stappen van document search uit volgens les 7."><span>07</span> Documenten & vectors <i>↗</i></button><button data-prompt="Hoe voeg ik document search als tool toe volgens les 8?"><span>08</span> Samenbrengen <i>↗</i></button></nav>
+<div class="side-heading">RECENTE GESPREKKEN</div><div id="threads" class="threads"></div>
+<div class="sidebar-bottom"><span class="status-dot" id="status-dot"></span><span id="connection">Verbinding controleren</span><p>Jouw gesprekken blijven lokaal op deze server bewaard.</p><a href="/api/export" download="studiekompas-gesprek.json">Exporteer dit gesprek ↗</a></div>
+</aside>
+<main>
+<header class="topbar"><div><span class="breadcrumb">SMART TECHNOLOGIES</span><span class="slash">/</span><span>Lessen 5—8</span></div><span class="local-badge"><span></span> Lokale studieagent</span></header>
+<div class="workspace">
+<section class="conversation" aria-label="Gesprek">
+<div id="messages" class="messages" role="log" aria-live="polite" aria-relevant="additions">
+<div class="welcome" id="welcome"><div class="eyebrow"><span class="tiny-star">✳</span> RUIMTE OM HET TE BEGRIJPEN</div><h1>Begrijp de les.<br><em>Bouw het zelf.</em></h1><p class="welcome-copy">Van je eerste tool tot document search. Stel je vraag, verken je lesmateriaal en ontdek hoe de onderdelen samenwerken.</p><div class="welcome-note"><span>↳</span> Uitleg met bronnen uit jouw eigen cursus.</div><div class="starter-grid">
+<button data-prompt="Leg in kleine stappen uit hoe een agent zelf beslist om een tool aan te roepen. Gebruik les 5."><span class="starter-number">01 / BEGRIJPEN</span><strong>Hoe kiest een agent zijn tools?</strong><span>Een helder voorbeeld uit de les <i>↗</i></span></button>
+<button data-prompt="Maak één oefenvraag over checkpointer memory uit les 6. Geef nog geen antwoord, wacht eerst op mijn poging."><span class="starter-number">02 / OEFENEN</span><strong>Test wat ik al weet</strong><span>Eén vraag, met ruimte om te proberen <i>↗</i></span></button>
+<button data-prompt="Ik heb drie dagen met twee uur per dag. Verdeel mijn studietijd over tools, chat history en document search."><span class="starter-number">03 / PLANNEN</span><strong>Maak mijn leerplan</strong><span>Van beschikbare tijd naar overzicht <i>↗</i></span></button>
+<button data-prompt="Wat is het verschil tussen embeddings en een vectorstore volgens les 7?"><span class="starter-number">04 / VERBINDEN</span><strong>Embeddings of vectorstore?</strong><span>Ontdek wat ieder onderdeel doet <i>↗</i></span></button>
+</div></div></div>
+<div class="composer-wrap"><div id="activity" class="activity" role="status"></div><form id="chat-form" class="composer"><label class="sr-only" for="prompt">Jouw studievraag</label><textarea id="prompt" placeholder="Waar loop je tegenaan? Stel je studievraag…" rows="2" maxlength="4000" required></textarea><div class="composer-footer"><span id="char-count">Enter om te versturen · Shift + Enter voor een nieuwe regel</span><div><button type="button" id="stop" class="stop hidden">Stop</button><button id="send" class="send">Verstuur <span>↑</span></button></div></div></form><p class="composer-note">Een leerhulp, geen docent. Controleer officiële eisen en deadlines in Brightspace.</p></div>
+</section>
+<aside class="context-panel" aria-label="Bronnen en documenten"><div class="panel-title"><span class="panel-icon">▤</span><div><h2>Je kennisbasis</h2><p>DE BRON ACHTER HET ANTWOORD</p></div></div><p class="panel-intro">De agent zoekt in je lesmateriaal wanneer je vraag daarom vraagt.</p>
+<div class="library-stats"><strong id="page-total">—</strong><span>PDF-pagina’s in je bibliotheek</span></div>
+<div id="documents" class="documents"></div>
+<form id="upload-form" class="upload-form"><label for="document-file" class="upload-label"><span>＋</span> Voeg eigen document toe</label><input id="document-file" type="file" accept=".pdf,.txt,.md"><p>PDF, tekst of Markdown · maximaal 12 MB</p><button type="submit" id="upload-button" class="secondary">Toevoegen & doorzoekbaar maken</button></form><div id="upload-status" class="upload-status" role="status"></div><p class="privacy-note">Gevonden passages worden voor je antwoord naar Azure gestuurd. Upload alleen materiaal dat je hiervoor mag gebruiken.</p>
+<div class="panel-divider"></div><h3>Gebruikte bronnen <span id="source-count">0</span></h3><div id="sources" class="sources"><p class="empty-note">Hier zie je de passages en pagina’s die de agent heeft geraadpleegd.</p></div>
+<div class="panel-divider"></div><h3>Wat de agent doet</h3><div id="tool-trace" class="tool-trace"><p class="empty-note">Geen toolaanroepen in dit gesprek.</p></div><div id="usage" class="usage">Tokengebruik verschijnt na je eerste antwoord.</div>
+</aside></div>
+</main><div id="notice" class="notice hidden" role="alert"></div></body></html>
