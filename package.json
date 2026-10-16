@@ -1,0 +1,10 @@
+{
+  "name": "agent-vervroegt",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Opdracht 2 Smart Technologies: agents, tools en document search (lessen 5 t/m 8)",
+  "engines": {
+    "node": ">=24"
+  }
+}
