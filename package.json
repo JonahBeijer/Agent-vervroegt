@@ -26,8 +26,10 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
-    "agent": "node les-5/run.js",
+    "agent": "node les-8/run.js",
     "index": "node les-7/index.js",
-    "test": "node --test tests/*.test.js"
+    "test": "node --test tests/*.test.js",
+    "agent:lesson5": "node les-5/run.js",
+    "import:course": "node les-7/import-course.js"
   }
 }

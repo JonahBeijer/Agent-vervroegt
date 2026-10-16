@@ -6,6 +6,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { Store } from '../les-6/store.js';
 import { createApp } from '../les-6/server.js';
+import { Library } from '../les-7/library.js';
 async function serverTest(action, serviceFactory) {
     const dir=mkdtempSync(path.join(tmpdir(),'agent-server-')),store=new Store(dir);
     const service=serviceFactory?.(store)||{chat:async(session,prompt,emit)=>{
@@ -43,3 +44,29 @@ test('gelijktijdige mutaties blokkeren dezelfde gebruiker maar geen andere gebru
     assert.equal((await post(base,b.cookie,{},'/api/session')).status,200);
     await(await first).text();
 },store=>({chat:async()=>{await new Promise(resolve=>setTimeout(resolve,120));return{answer:'TEST',tools:[],sources:[]};}})));
+
+test('de zevende vraag binnen een minuut wordt niet naar de agent gestuurd',()=>serverTest(async base=>{
+    const a=await session(base);
+    for(let i=0;i<6;i++){const res=await post(base,a.cookie,{prompt:'TEST '+i});assert.equal(res.status,200);await res.text();}
+    assert.equal((await post(base,a.cookie,{prompt:'TEST teveel'})).status,429);
+}));
+test('upload wordt doorzoekbaar en downloaden/verwijderen blijft afgeschermd',async()=>{
+    const dir=mkdtempSync(path.join(tmpdir(),'agent-upload-')),store=new Store(dir);
+    const library=new Library(store,{embeddings:{embedDocuments:async texts=>texts.map(()=>[1,0]),embedQuery:async()=>[1,0]}});
+    const server=createApp({store,service:{},library}).listen(0,'127.0.0.1');await once(server,'listening');
+    const base='http://127.0.0.1:'+server.address().port;
+    try{
+        const a=await session(base),b=await session(base);
+        const body=new FormData();body.append('file',new Blob(['FICTIEVE TESTINHOUD voor documentupload en gebruikersscheiding.']),'TEST.txt');
+        const res=await fetch(base+'/api/documents',{method:'POST',headers:{cookie:a.cookie},body});assert.equal(res.status,202);const job=await res.json();
+        let result;
+        for(let i=0;i<30;i++){result=await(await fetch(base+'/api/jobs/'+job.job,{headers:{cookie:a.cookie}})).json();if(result.status!=='running')break;await new Promise(resolve=>setTimeout(resolve,10));}
+        assert.equal(result.status,'done');
+        assert.equal((await fetch(base+'/api/jobs/'+job.job,{headers:{cookie:b.cookie}})).status,404);
+        const docs=await(await fetch(base+'/api/documents',{headers:{cookie:a.cookie}})).json();assert.equal(docs.length,1);
+        assert.equal((await fetch(base+'/api/documents/'+docs[0].id+'/download',{headers:{cookie:b.cookie}})).status,404);
+        assert.equal((await fetch(base+'/api/documents/'+docs[0].id+'/download',{headers:{cookie:a.cookie}})).status,200);
+        assert.equal((await fetch(base+'/api/documents/'+docs[0].id,{method:'DELETE',headers:{cookie:b.cookie}})).status,404);
+        assert.equal((await fetch(base+'/api/documents/'+docs[0].id,{method:'DELETE',headers:{cookie:a.cookie}})).status,200);
+    }finally{server.closeAllConnections();await new Promise(resolve=>server.close(resolve));store.close();rmSync(dir,{recursive:true,force:true});}
+});

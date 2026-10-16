@@ -75,10 +75,10 @@ export class Library {
         }catch(error){this.db.exec('ROLLBACK');unlinkSync(file);throw error;}
         progress('Document doorzoekbaar',100);return id;
     }
-    async search(query,owner,limit=4) {
+    async search(query,owner,limit=4,lesson=null) {
         const vector=await this.embeddings.embedQuery(query);
         const rows=this.db.prepare("SELECT c.*,d.name,d.owner FROM chunks c JOIN documents d ON d.id=c.doc WHERE d.owner='shared' OR d.owner=?").all(owner);
-        return rows.map(row=>({...row,score:cosine(vector,JSON.parse(row.vector))})).filter(row=>row.score>=0.65).sort((a,b)=>b.score-a.score).slice(0,limit).map(({vector,owner,...row})=>row);
+        return rows.filter(row=>!lesson || row.name.startsWith('Les '+lesson+' - ')).map(row=>({...row,score:cosine(vector,JSON.parse(row.vector))})).filter(row=>row.score>=0.65).sort((a,b)=>b.score-a.score).slice(0,limit).map(({vector,owner,...row})=>row);
     }
     file(id,owner) {
         const row=this.db.prepare("SELECT id,name FROM documents WHERE id=? AND (owner='shared' OR owner=?)").get(id,owner);
