@@ -57,7 +57,7 @@ function apply(next) {
     state=next;$('threads').replaceChildren();
     for(const thread of state.threads){const button=document.createElement('button');button.textContent=thread.title;button.classList.toggle('active',thread.id===state.thread);button.addEventListener('click',()=>selectThread(thread.id));$('threads').append(button);}
     renderDocuments(state.documents);
-    $('connection').textContent=state.status.azure?'Azure ingesteld':'Azure nog niet ingesteld';$('status-dot').classList.toggle('ready',state.status.azure);
+    $('connection').textContent=state.status.providerName+(state.status.configured?' ingesteld':' nog niet ingesteld');$('status-dot').classList.toggle('ready',state.status.configured);
     const total=state.turns.reduce((sum,turn)=>sum+(turn.detail.tokens?.total||0),0);
     $('usage').textContent=total.toLocaleString('nl-NL')+' gemeten tokens · '+state.turns.length+' / '+state.maxTurns+' rondes in dit gesprek';
 }

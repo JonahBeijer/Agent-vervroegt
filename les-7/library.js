@@ -1,19 +1,14 @@
+import { RecursiveCharacterTextSplitter } from '@langchain/textsplitters';
 import { readFileSync, writeFileSync, mkdirSync, unlinkSync } from 'node:fs';
 import { createHash, randomUUID } from 'node:crypto';
 import path from 'node:path';
 import { PDFParse } from 'pdf-parse';
 import { convert } from 'html-to-text';
 import { LocalEmbeddings } from './embeddings.js';
-export function chunksOf(text, size = 950, overlap = 130) {
+export async function chunksOf(text, size = 950, overlap = 130) {
     const clean = text.replaceAll('\u0000','').replace(/\r/g,'').trim();
-    const chunks = [];
-    for(let start=0;start<clean.length;) {
-        let end=Math.min(clean.length,start+size);
-        if(end<clean.length){const boundary=clean.lastIndexOf(' ',end);if(boundary>start+size/2)end=boundary;}
-        const content=clean.slice(start,end).trim();if(content.length>=25)chunks.push(content);
-        if(end>=clean.length)break;start=Math.max(start+1,end-overlap);
-    }
-    return chunks;
+    const splitter = new RecursiveCharacterTextSplitter({ chunkSize: size, chunkOverlap: overlap });
+    return (await splitter.splitText(clean)).filter(chunk => chunk.length >= 25);
 }
 export function cosine(a,b) {
     if(a.length!==b.length || !a.length)return 0;
@@ -56,7 +51,7 @@ export class Library {
         if(existing)return existing.id;
         progress('Tekst en pagina’s lezen',5);
         const extracted=await extract(name,bytes);
-        const chunks=extracted.pages.flatMap(page=>chunksOf(page.text).map(text=>({text,page:page.page||null,section:page.section||null})));
+        const chunks=(await Promise.all(extracted.pages.map(async page=>(await chunksOf(page.text)).map(text=>({text,page:page.page||null,section:page.section||null}))))).flat();
         if(!chunks.length)throw userError('Geen doorzoekbare tekst gevonden. Een gescande PDF heeft eerst OCR nodig.');
         if(chunks.length>600 || extracted.pdfPages>250)throw userError('Document is te groot. Splits het in kleinere bestanden.');
         progress('Lokaal embeddingmodel laden',10);

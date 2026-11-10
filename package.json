@@ -13,6 +13,7 @@
     "@langchain/langgraph": "^1.5.0",
     "@langchain/langgraph-checkpoint-sqlite": "^1.1.0",
     "@langchain/openai": "^1.6.2",
+    "@langchain/textsplitters": "^1.0.2",
     "dompurify": "^3.4.17",
     "express": "^5.3.0",
     "fflate": "^0.8.3",
@@ -30,6 +31,7 @@
     "index": "node les-7/index.js",
     "test": "node --test tests/*.test.js",
     "agent:lesson5": "node les-5/run.js",
-    "import:course": "node les-7/import-course.js"
+    "import:course": "node les-7/import-course.js",
+    "verify:rubric": "node les-8/verify-rubric.js"
   }
 }

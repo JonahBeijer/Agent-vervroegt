@@ -9,4 +9,4 @@ try {
     const result = await runContext.run(context, () => createAssistant().invoke({ messages: [{ role: 'user', content: prompt }] }, { configurable: { thread_id: randomUUID() }, signal: context.signal, recursionLimit: 16 }));
     console.log(result.messages.at(-1).content);
     console.log('Uitgevoerde tools:', context.events.map(event => event.name).join(', ') || 'geen');
-} catch (error) { console.error(error.code === 'AZURE_NOT_CONFIGURED' ? error.message : 'Agentaanroep mislukt. Controleer configuratie en verbinding.'); process.exitCode = 1; }
+} catch (error) { console.error(['AZURE_NOT_CONFIGURED','MODEL_NOT_CONFIGURED'].includes(error.code) ? error.message : 'Agentaanroep mislukt. Controleer configuratie en verbinding.'); process.exitCode = 1; }

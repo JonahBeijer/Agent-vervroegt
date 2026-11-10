@@ -1,4 +1,5 @@
 import path from 'node:path';
+import { configuration } from '../les-5/config.js';
 import { SqliteSaver } from '@langchain/langgraph-checkpoint-sqlite';
 import { RemoveMessage } from '@langchain/core/messages';
 import { REMOVE_ALL_MESSAGES } from '@langchain/langgraph';
@@ -40,8 +41,8 @@ export function createService(store, { tools = createTools(), model, agent: supp
                     if (prior.length) await agent.updateState({ configurable: config.configurable }, { messages: [new RemoveMessage({ id: REMOVE_ALL_MESSAGES }), ...prior] });
                     else await saver?.deleteThread(session.active);
                 } catch { /* De fout blijft zichtbaar; ruwe providerdetails worden nooit verstuurd. */ }
-                const code = signal?.aborted ? 'ABORTED' : error.code === 'AZURE_NOT_CONFIGURED' ? error.code : error.status === 429 ? 'RATE_LIMIT' : error.code === 'OUTPUT_LIMIT' || error.code === 'EMPTY_ANSWER' ? error.code : 'AGENT_ERROR';
-                const texts = { ABORTED: 'De aanvraag is afgebroken of duurde te lang.', AZURE_NOT_CONFIGURED: 'Azure is nog niet ingesteld. Controleer het externe env-bestand.', RATE_LIMIT: 'De Azure-limiet is bereikt. Probeer later opnieuw.', OUTPUT_LIMIT: 'Het antwoord bereikte de uitvoerlimiet. Vraag om een kortere uitleg.', EMPTY_ANSWER: 'De agent kon zijn antwoord niet afronden. Probeer een gerichtere vraag.', AGENT_ERROR: 'De agent kon niet antwoorden. Controleer de configuratie of probeer opnieuw.' };
+                const code = signal?.aborted ? 'ABORTED' : ['AZURE_NOT_CONFIGURED','MODEL_NOT_CONFIGURED'].includes(error.code) ? 'MODEL_NOT_CONFIGURED' : error.status === 429 ? 'RATE_LIMIT' : error.code === 'OUTPUT_LIMIT' || error.code === 'EMPTY_ANSWER' ? error.code : 'AGENT_ERROR';
+                const texts = { ABORTED: 'De aanvraag is afgebroken of duurde te lang.', MODEL_NOT_CONFIGURED: configuration().providerName + ' is nog niet ingesteld. Controleer het externe env-bestand.', RATE_LIMIT: 'De limiet van ' + configuration().providerName + ' is bereikt. Probeer later opnieuw.', OUTPUT_LIMIT: 'Het antwoord bereikte de uitvoerlimiet. Vraag om een kortere uitleg.', EMPTY_ANSWER: 'De agent kon zijn antwoord niet afronden. Probeer een gerichtere vraag.', AGENT_ERROR: 'De agent kon niet antwoorden. Controleer de configuratie of probeer opnieuw.' };
                 throw Object.assign(new Error(texts[code]), { code, tokens, tools: context.events });
             }
         },

@@ -32,3 +32,19 @@ Een eerdere algemene Azure-begroeting zonder cursuspassages gaf een echt antwoor
 - Tokenmetadata verschijnt per antwoord; totalen van opgeslagen gesprekken zijn geen volledige factuurmeting.
 - De nieuws-API-tool is aanwezig en vereist NEWSDATA_API. De daadwerkelijke agentkeuze voor die optionele tool en een succesvolle live nieuwsronde zijn niet in deze controle uitgevoerd.
 - Geen openbare deployment, screencast, Brightspace-inlevering of gebruikersonderzoek uitgevoerd. Deze onderdelen zijn niet verzonnen.
+
+## NovaAI en rubriccontrole — 9 november 2026
+
+Uitgevoerd door Codex; technische controles, geen studentonderzoek of Brightspace-inlevering.
+
+- De agent hergebruikt standaard ../taalmodel-vervroegt-secrets/nova.env. NovaAI gemma4:26b is daadwerkelijk ingesteld; de sleutel is niet naar de repository gekopieerd. AGENT_ENV_FILE blijft een expliciete override.
+- RecursiveCharacterTextSplitter uit @langchain/textsplitters is geïntegreerd in documentimport. LocalEmbeddings blijft de LangChain Embeddings-interface gebruiken. Echte lokale testvectoren hadden 384 dimensies.
+- npm run verify:rubric controleert de daadwerkelijke SQLite-bibliotheek: 19 documenten, 58 PDF-pagina’s in de bronbestanden en 110 chunks. Ook het aantal PDF-pagina’s met daadwerkelijk opgeslagen tekst wordt geteld en moet minstens tien zijn.
+- Lokale zoekcontrole zonder lesfilter: MemorySaver/thread_id vindt les 6 (PDF-pagina 11 als eerste hit); embeddings/vector database vindt les 7; document search tool agent vindt les 8. Geen cursuspassages zijn tijdens deze audit naar NovaAI gestuurd.
+- Echte NovaAI-agentcontrole: make_study_plan is door het model aangeroepen en succesvol uitgevoerd voor drie dagen van twee uur. Technology_news is door het model aangeroepen, gebruikte de bestaande NEWSDATA_API en gaf echte nieuwsbronmetadata terug. Dit bewijst tooluitvoering, niet dat elk nieuwsbericht inhoudelijk bij de cursus past of dat de samenvatting foutloos is.
+- Een geïsoleerde HTTP-controle met een expliciet fictief testdocument riep daadwerkelijk search_documents aan. Het antwoord noemde de juiste testcode KOMPAS-731 en de juiste testbestandsnaam/sectie. De bron kwam in de response terug. Het gesprek werd opgeslagen, terwijl een andere cookiesessie leeg bleef. De tijdelijke testdatabase is opgeruimd.
+- De regressietests controleren ook dat checkpoints en opgeslagen gesprekken een herstart overleven en van elkaar gescheiden blijven. Deze geautomatiseerde agenttests gebruiken herkenbaar fictieve modeldata; ze zijn geen extra live modelmetingen.
+- De privacytekst en verbindingsstatus zijn providerneutraal gemaakt. De Node-agent toont toolnaam, invoer, status en bronmetadata als controleerbaar bewijs.
+- npm audit fix heeft twee compatibele dependency-updates uitgevoerd; daarna rapporteerde npm audit nul kwetsbaarheden.
+
+De vorige secties beschrijven historische Azure-controles. De standaardprovider is nu NovaAI. De eerder genoemde beperking dat live nieuws nog niet gecontroleerd was, is voor bovenstaande NovaAI-controle opgeheven.

@@ -7,8 +7,8 @@ import { Store } from '../les-6/store.js';
 import { Library, chunksOf, cosine } from '../les-7/library.js';
 const vector = text => ['alpha','beta','gamma'].map(word => text.toLowerCase().split(word).length - 1);
 const embeddings = { embedDocuments: async texts => texts.map(vector), embedQuery: async text => vector(text) };
-test('lange tekst wordt begrensd gesplitst met overlap en eindigt volledig', () => {
-    const text='alpha beta gamma '.repeat(150);const chunks=chunksOf(text);
+test('lange tekst wordt begrensd gesplitst met overlap en eindigt volledig', async () => {
+    const text='alpha beta gamma '.repeat(150);const chunks=await chunksOf(text);
     assert(chunks.length>1);assert(chunks.every(chunk=>chunk.length<=950));assert(chunks.at(-1).endsWith('gamma'));
     assert.equal(cosine([1,0],[0,1]),0);assert.equal(cosine([1,0],[1,0]),1);
 });
