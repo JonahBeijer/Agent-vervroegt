@@ -26,7 +26,7 @@ npm start
 
 De loader probeert achtereenvolgens AGENT_ENV_FILE, ../agent-vervroegt-secrets/nova.env, ../taalmodel-vervroegt-secrets/nova.env en daarna de bestaande Azure-configuraties. De standaard hergebruikt NovaAI van Taalmodel-vervroegt. De laatste twee opties hergebruiken de bestaande configuratie van opdracht 1; er worden geen sleutels naar deze repository gekopieerd.
 
-Vereist: AZURE_OPENAI_API_KEY, AZURE_OPENAI_API_INSTANCE_NAME, AZURE_OPENAI_API_DEPLOYMENT_NAME en AZURE_OPENAI_API_VERSION. Stel AZURE_OPENAI_MODEL_NAME in als de deployment een eigen alias heeft. Voor gpt-5-nano wordt low reasoning gebruikt met ruimte voor interne redeneertokens en het antwoord. NEWSDATA_API is optioneel voor actuele praktijkvoorbeelden.
+Voor NovaAI vereist: NOVA_API_KEY; NOVA_MODEL en NOVA_BASE_URL zijn optioneel. Alleen bij LLM_PROVIDER=azure zijn AZURE_OPENAI_API_KEY, AZURE_OPENAI_API_INSTANCE_NAME, AZURE_OPENAI_API_DEPLOYMENT_NAME en AZURE_OPENAI_API_VERSION vereist. Stel AZURE_OPENAI_MODEL_NAME in als de deployment een eigen alias heeft. Voor gpt-5-nano wordt low reasoning gebruikt met ruimte voor interne redeneertokens en het antwoord. NEWSDATA_API is optioneel voor actuele praktijkvoorbeelden.
 
 De server luistert alleen op 127.0.0.1. Met PORT wijzig je de poort. Publicatie vereist een passende eigen providerconfiguratie en een beoordeling van toegang tot de cursusbestanden; er is geen publieke deployment uitgevoerd.
 
@@ -45,7 +45,7 @@ npm run import:course -- "C:/pad/les5.zip" "C:/pad/les6.zip" "C:/pad/les7.zip" "
 npm run index -- "C:/pad/eigen-document.pdf"
 ~~~
 
-De standaardvolgorde is les 5, 6, 7, 8. Herhaald importeren van dezelfde bron maakt geen dubbele documenten. Je kunt eigen PDF-, TXT- en Markdown-bestanden ook via de interface toevoegen. Eigen uploads horen alleen bij jouw browserprofiel; het geïmporteerde lesmateriaal is voor alle lokale profielen beschikbaar.
+De standaardvolgorde is les 5, 6, 7, 8. Herhaald importeren van dezelfde bron maakt geen dubbele documenten. Het compacte documentenoverzicht toont de beschikbare bestanden en downloadlinks. Extra documenten voeg je toe met npm run index; deze import is voor alle lokale profielen beschikbaar.
 
 De eerste embeddingaanroep downloadt het openbare meertalige E5-small-model. Daarna worden echte vectoren van 384 dimensies lokaal berekend. Er is geen Azure embedding-deployment nodig. Een scan zonder tekstlaag vereist eerst OCR.
 
@@ -65,7 +65,7 @@ LangChain createAgent kiest zelf of een tool nodig is. De gevonden gegevens word
 - SqliteSaver bewaart de model- en toolcontext per gesprek. Een onvoorspelbare HttpOnly-cookie selecteert je profiel; de browser kan geen willekeurige andere gebruiker kiezen.
 - Een tweede gesprek krijgt een nieuw thread_id. Oude gesprekken kunnen opnieuw worden geselecteerd. Maximaal 12 geslaagde rondes per gesprek begrenzen de context.
 - De lokale SQLite-vectorstore bewaart tekst, embedding, bestandsnaam en echte PDF-pagina. Bij tekst en HTML verwijzen bronnen naar secties. Voor deze kleine collectie wordt exacte cosinusgelijkenis gebruikt.
-- Voor een antwoord gaan gevonden documentpassages naar de ingestelde AI-provider (standaard NovaAI). De interface vermeldt dit bij de documentbibliotheek. Gebruik alleen documenten die je hiervoor mag gebruiken.
+- Voor een antwoord gaan gevonden documentpassages naar de ingestelde AI-provider (standaard NovaAI). Gebruik alleen documenten die je hiervoor mag gebruiken.
 - Bronkaarten tonen de daadwerkelijk geraadpleegde passages en een downloadlink. Een zoekmatch is geen garantie dat het model iedere claim juist uitlegt.
 - Geen verzonnen deadlines, punten, studentreflecties of testresultaten. Officiële eisen blijven bij Brightspace en de docent.
 - Geen publieke accountlogin: het browserprofiel is bedoeld voor deze lokale lesapp. Eigen documenten kun je verwijderen; eerdere antwoorden en checkpoints kunnen nog afgeleide informatie bevatten.
@@ -107,3 +107,5 @@ npm run agent -- "Zoek via technology_news een actueel Nederlands technologieber
 ~~~
 
 De tweede test gebruikt NEWSDATA_API uit hetzelfde externe env-bestand. Modelcredentials alleen tellen niet als credentials voor een tool. Controleer de feitelijk gelogde toolstatus en het antwoord; een API-limiet of weigering is geen geslaagde live uitvoering. Brightspace-inlevering van Use Case Agent en de screencast moeten door de student worden afgerond.
+
+Het zijpaneel bevat uitsluitend gesprekken, een compact uitklapbaar documentenoverzicht, gebruikte bronnen en toolactiviteiten. Upload, verwijderen, export, verbindingsstatus, lesnavigatie en de gezamenlijke tokenteller staan niet meer in het zijpaneel. De startvragen en tokenmetadata bij chatberichten blijven beschikbaar.

@@ -6,7 +6,7 @@ Dit overzicht beschrijft de implementatie en controles, niet een toegekend cijfe
 
 | Niveau | Implementatie | Demonstratie |
 | --- | --- | --- |
-| 10 | les-7/library.js gebruikt LangChains RecursiveCharacterTextSplitter; les-7/embeddings.js implementeert LangChain Embeddings met echte lokale E5-vectoren. | npm run verify:rubric toont splitsing en vectorlengte 384. Upload een relevant document om de volledige import te tonen. |
+| 10 | les-7/library.js gebruikt LangChains RecursiveCharacterTextSplitter; les-7/embeddings.js implementeert LangChain Embeddings met echte lokale E5-vectoren. | npm run verify:rubric toont splitsing en vectorlengte 384. Importeer een relevant document met npm run index om de volledige import te tonen. |
 | 30 | SQLite bewaart chunks, vectoren, documentnamen en pagina’s. search_documents zoekt relevante passages via cosinusgelijkenis. | Stel in de frontend een lesvraag en toon de gebruikte documenttool en bronnen. |
 | 40 | De lokale bibliotheek bevat meerdere documenten en ruim tien opgeslagen pagina’s. De Node-controle toetst aantallen en verwacht documenten uit les 6/7/8 bij gerichte queries. | npm run verify:rubric; laat bestandsnaam, PDF-pagina/sectie en similarity zien. |
 | 50 | De API retourneert geraadpleegde bronnen. De interface toont bronkaarten met bestandsnaam, pagina/sectie, passage en documentlink. | Vraag naar MemorySaver en thread_id volgens les 6; controleer de tekst van de bron tegen het antwoord. |

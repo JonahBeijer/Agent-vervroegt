@@ -48,3 +48,9 @@ Uitgevoerd door Codex; technische controles, geen studentonderzoek of Brightspac
 - npm audit fix heeft twee compatibele dependency-updates uitgevoerd; daarna rapporteerde npm audit nul kwetsbaarheden.
 
 De vorige secties beschrijven historische Azure-controles. De standaardprovider is nu NovaAI. De eerder genoemde beperking dat live nieuws nog niet gecontroleerd was, is voor bovenstaande NovaAI-controle opgeheven.
+
+## Compacte zijpanelen — 10 november 2026
+
+De zijpanelen bevatten nu alleen gesprekken met Nieuw gesprek, een compact uitklapbaar documentenoverzicht met bronbestandlinks, gebruikte bronnen en toolactiviteiten. Lesnavigatie, verbindingsstatus, export, upload/verwijderknoppen en de gezamenlijke token-/rondeteller zijn verwijderd uit deze panelen. Documentimport via Node en de bestaande opslag blijven werken. Tokenmetadata bij individuele chatberichten staat buiten het zijpaneel.
+
+Controle: alle 19 bestaande tests geslaagd. Browsercontrole met expliciet fictieve gegevens: berichten versturen, knoppen uitgeschakeld tijdens verwerking, documentlijst uitklappen, bronkaart en toolactiviteit tonen, nieuw gesprek, terugschakelen en herladen van geschiedenis. Geen console-errors waargenomen. Hiervoor zijn geen externe modelaanvragen gedaan.

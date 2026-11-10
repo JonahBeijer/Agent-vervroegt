@@ -41,25 +41,21 @@ function renderTools(events=[]) {
     }
 }
 function renderDocuments(documents=[]) {
-    $('documents').replaceChildren();$('page-total').textContent=documents.reduce((sum,doc)=>sum+(doc.pdfPages||0),0);
-    if(!documents.length){const p=document.createElement('p');p.className='empty-note';p.textContent='Nog geen documenten. Importeer het lesmateriaal met npm run import:course of voeg hieronder een bestand toe.';$('documents').append(p);}
+    $('documents').replaceChildren();$('document-count').textContent=documents.length;
+    const pages=documents.reduce((sum,doc)=>sum+(doc.pdfPages||0),0);
+    $('document-summary').textContent=documents.length+(documents.length===1?' document':' documenten')+' · '+pages+' PDF-pagina’s';
+    if(!documents.length){const p=document.createElement('p');p.className='empty-note';p.textContent='Nog geen documenten. Importeer het lesmateriaal met npm run import:course.';$('documents').append(p);}
     for(const doc of documents){
         const row=document.createElement('div');row.className='document';
-        const icon=document.createElement('span');icon.className='doc-symbol';icon.textContent=doc.pdfPages?'PDF':'TXT';
-        const copy=document.createElement('div');copy.className='doc-copy';const title=document.createElement('strong');title.textContent=doc.name;
-        const info=document.createElement('span');info.textContent=(doc.pdfPages?doc.pdfPages+' pagina’s':doc.sections+' secties')+' · '+doc.chunks+' tekstfragmenten';
-        const link=document.createElement('a');link.href='/api/documents/'+encodeURIComponent(doc.id)+'/download';link.textContent='Bronbestand ↗';copy.append(title,info,document.createElement('br'),link);row.append(icon,copy);
-        if(!doc.shared){const del=document.createElement('button');del.className='delete-doc';del.textContent='×';del.setAttribute('aria-label','Verwijder '+doc.name);del.addEventListener('click',async()=>{try{await api('documents/'+doc.id,{method:'DELETE'});renderDocuments(await api('documents'));notice('Document verwijderd. Eerdere gespreksantwoorden blijven bewaard.');}catch(error){notice(error.message);}});row.append(del);}
-        $('documents').append(row);
+        const link=document.createElement('a');link.href='/api/documents/'+encodeURIComponent(doc.id)+'/download';link.textContent=doc.name;
+        const info=document.createElement('small');info.textContent=(doc.pdfPages?doc.pdfPages+(doc.pdfPages===1?' pagina':' pagina’s'):doc.sections+(doc.sections===1?' sectie':' secties'))+' · '+doc.chunks+(doc.chunks===1?' fragment':' fragmenten');
+        row.append(link,info);$('documents').append(row);
     }
 }
 function apply(next) {
     state=next;$('threads').replaceChildren();
     for(const thread of state.threads){const button=document.createElement('button');button.textContent=thread.title;button.classList.toggle('active',thread.id===state.thread);button.addEventListener('click',()=>selectThread(thread.id));$('threads').append(button);}
     renderDocuments(state.documents);
-    $('connection').textContent=state.status.providerName+(state.status.configured?' ingesteld':' nog niet ingesteld');$('status-dot').classList.toggle('ready',state.status.configured);
-    const total=state.turns.reduce((sum,turn)=>sum+(turn.detail.tokens?.total||0),0);
-    $('usage').textContent=total.toLocaleString('nl-NL')+' gemeten tokens · '+state.turns.length+' / '+state.maxTurns+' rondes in dit gesprek';
 }
 async function selectThread(thread){if(busy)return;lock(true);try{const next=await post('session',thread?{thread}:{});apply(next);$('messages').replaceChildren();for(const turn of next.turns){bubble('user',turn.prompt);bubble('assistant',turn.answer,turn.detail);}const last=next.turns.at(-1)?.detail;renderSources(last?.sources);renderTools(last?.tools);if(!next.turns.length){const p=document.createElement('p');p.className='empty-note';p.textContent='Nieuw gesprek. Stel een vraag over lessen 5 t/m 8.';$('messages').append(p);}}catch(error){notice(error.message);}finally{lock(false);}}
 async function submit(prompt) {
@@ -73,7 +69,7 @@ async function submit(prompt) {
         const event=line=>{
             if(!line.trim())return;const data=JSON.parse(line);
             if(data.type==='tool'){const i=events.findIndex(event=>event.id===data.event.id);if(i<0)events.push(data.event);else events[i]=data.event;renderTools(events);$('activity').textContent=toolLabels[data.event.name]||'Tool uitvoeren…';}
-            if(data.type==='done'){completed=true;bubble('assistant',data.answer,data);renderSources(data.sources);renderTools(data.tools);apply(data.state);if(data.tokens)$('usage').textContent+=' · laatste antwoord '+data.tokens.total+' tokens';}
+            if(data.type==='done'){completed=true;bubble('assistant',data.answer,data);renderSources(data.sources);renderTools(data.tools);apply(data.state);}
             if(data.type==='error'){completed=true;const card=bubble('assistant',data.error,{tokens:data.tokens});card.classList.add('error');renderTools(data.tools);}
         };
         while(true){const {value,done}=await reader.read();if(done)break;pending+=decoder.decode(value,{stream:true});const lines=pending.split('\n');pending=lines.pop();for(const line of lines)event(line);}if(pending.trim())event(pending);
@@ -87,12 +83,4 @@ $('prompt').addEventListener('input',()=>{$('char-count').textContent=$('prompt'
 for(const button of document.querySelectorAll('[data-prompt]'))button.addEventListener('click',()=>submit(button.dataset.prompt));
 $('new-chat').addEventListener('click',()=>selectThread());
 $('stop').addEventListener('click',()=>controller?.abort());
-$('upload-form').addEventListener('submit',async event=>{
-    event.preventDefault();if(busy)return;const file=$('document-file').files[0];if(!file){notice('Kies eerst een bestand.');return;}lock(true);$('stop').classList.add('hidden');
-    try{
-        const form=new FormData();form.append('file',file);const job=await api('documents',{method:'POST',body:form});
-        while(true){const progress=await api('jobs/'+job.job);$('upload-status').textContent=progress.phase+(progress.progress?' · '+progress.progress+'%':'');if(progress.status==='error')throw new Error(progress.error);if(progress.status==='done')break;await new Promise(resolve=>setTimeout(resolve,1000));}
-        renderDocuments(await api('documents'));$('document-file').value='';notice('Je document is doorzoekbaar.');
-    }catch(error){$('upload-status').textContent=error.message;}finally{lock(false);}
-});
 try{const initial=await api('session');apply(initial);if(initial.turns.length){$('messages').replaceChildren();for(const turn of initial.turns){bubble('user',turn.prompt);bubble('assistant',turn.answer,turn.detail);}renderSources(initial.turns.at(-1).detail.sources);renderTools(initial.turns.at(-1).detail.tools);}}catch(error){notice('Server niet bereikbaar. '+error.message);}
