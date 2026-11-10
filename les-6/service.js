@@ -6,6 +6,7 @@ import { REMOVE_ALL_MESSAGES } from '@langchain/langgraph';
 import { createAssistant } from '../les-5/agent.js';
 import { createTools } from '../les-5/tools.js';
 import { runContext } from '../les-5/context.js';
+import { messageText } from '../les-5/empty-response.js';
 export function tokenUsage(messages) {
     const measured = messages.map(message => message.usage_metadata).filter(Boolean);
     return measured.length ? measured.reduce((sum, usage) => ({ input: sum.input + usage.input_tokens, output: sum.output + usage.output_tokens, total: sum.total + usage.total_tokens }), { input: 0, output: 0, total: 0 }) : null;
@@ -26,18 +27,21 @@ export function createService(store, { tools = createTools(), model, agent: supp
             try {
                 const result = await runContext.run(context, () => agent.invoke({ messages: [{ role: 'user', content: prompt }] }, config));
                 messages = result.messages.filter(message => !ids.has(message.id));
-                tokens = tokenUsage(messages);
+                tokens = tokenUsage([...messages, ...(context.discardedModelMessages || [])]);
                 const final = result.messages.at(-1);
                 if (final.response_metadata?.finish_reason === 'length') throw Object.assign(new Error('Het antwoord bereikte de uitvoerlimiet. Vraag om een kortere uitleg.'), { code: 'OUTPUT_LIMIT' });
-                const answer = typeof final.content === 'string' ? final.content : final.content.filter(block => block.type === 'text').map(block => block.text).join('\n');
-                if (!answer?.trim() || final.tool_calls?.length) throw Object.assign(new Error('De agent kon zijn antwoord niet afronden. Probeer een gerichtere vraag.'), { code: 'EMPTY_ANSWER' });
+                const answer = messageText(final);
+                if (!answer.trim() || final.tool_calls?.length) {
+                    console.warn('[agent model]', { issue: 'unfinished_answer', finishReason: final.response_metadata?.finish_reason || 'unknown', pendingToolCalls: final.tool_calls?.length || 0, invalidToolCalls: final.invalid_tool_calls?.length || 0, recoveryUsed: Boolean(context.emptyRecoveryUsed), tools: context.events.map(event => ({ name: event.name, status: event.status })) });
+                    throw Object.assign(new Error('De agent kon zijn antwoord niet afronden. Probeer een gerichtere vraag.'), { code: 'EMPTY_ANSWER' });
+                }
                 const detail = { tokens, tools: context.events, sources: [...context.sources.values()] };
                 store.saveTurn(session, prompt, answer, detail);
                 return { answer, ...detail };
             } catch (error) {
                 try {
                     const partial = await agent.getState({ configurable: config.configurable });
-                    if (!tokens) tokens = tokenUsage((partial.values?.messages || []).filter(message => !ids.has(message.id)));
+                    if (!tokens) tokens = tokenUsage([...(partial.values?.messages || []).filter(message => !ids.has(message.id)), ...(context.discardedModelMessages || [])]);
                     if (prior.length) await agent.updateState({ configurable: config.configurable }, { messages: [new RemoveMessage({ id: REMOVE_ALL_MESSAGES }), ...prior] });
                     else await saver?.deleteThread(session.active);
                 } catch { /* De fout blijft zichtbaar; ruwe providerdetails worden nooit verstuurd. */ }

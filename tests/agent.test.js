@@ -62,3 +62,48 @@ test('afgebroken modeloutput telt tokens maar verandert geslaagde geschiedenis n
         assert.equal((await runtime.service.chat(session,'WHO_TEST',()=>{},AbortSignal.timeout(10000))).answer,'TEST onthouden');
     }finally{runtime.close();rmSync(dir,{recursive:true,force:true});}
 });
+
+class EmptyResponseTestModel extends BaseChatModel {
+    _llmType(){return 'explicit-fictitious-empty-response-test';}
+    bindTools(){return this;}
+    calls = 0;
+    finalAttempts = 0;
+    mode = 'after-tool';
+    async _generate(messages) {
+        this.calls++;
+        const last = messages.at(-1);
+        const base = {id:randomUUID(),usage_metadata:{input_tokens:3,output_tokens:2,total_tokens:5},response_metadata:{finish_reason:'stop'}};
+        let message;
+        if(this.mode === 'before-tool' && this.calls === 1) message = new AIMessage({...base,content:''});
+        else if(last._getType() !== 'tool') message = new AIMessage({...base,content:'',tool_calls:[{id:randomUUID(),type:'tool_call',name:'current_date',args:{}}]});
+        else {
+            this.finalAttempts++;
+            const empty = this.mode === 'always-empty' || (this.mode === 'after-tool' && this.finalAttempts === 1);
+            message = new AIMessage({...base,content:empty ? [{type:'text',text:'   '}] : 'FICTIEF TESTANTWOORD na datumtool.'});
+        }
+        return {generations:[{text:typeof message.content === 'string' ? message.content : '',message}]};
+    }
+}
+for (const mode of ['before-tool', 'after-tool']) test('leeg modelantwoord herstelt zonder dubbele tooluitvoering: '+mode,async()=>{
+    const dir=mkdtempSync(path.join(tmpdir(),'agent-empty-recovery-'));
+    const model=new EmptyResponseTestModel({}); model.mode=mode;
+    const runtime=createRuntime({directory:dir,embeddings:fakeEmbeddings,model});
+    try {
+        const session=runtime.store.session(null);
+        const result=await runtime.service.chat(session,'FICTIEVE DATUMTEST',()=>{},AbortSignal.timeout(10000));
+        assert.equal(model.calls,3); assert.equal(result.tools.length,1);
+        assert.equal(result.tools[0].name,'current_date'); assert.equal(result.tools[0].status,'done');
+        assert.equal(result.tokens.total,15); assert.equal(runtime.store.turns(session.active).length,1);
+        assert.match(result.answer,/FICTIEF/);
+    } finally {runtime.close();rmSync(dir,{recursive:true,force:true});}
+});
+test('blijvend leeg antwoord stopt na één herstelpoging en bewaart geen ongeldige ronde',async()=>{
+    const dir=mkdtempSync(path.join(tmpdir(),'agent-empty-failed-'));
+    const model=new EmptyResponseTestModel({}); model.mode='always-empty';
+    const runtime=createRuntime({directory:dir,embeddings:fakeEmbeddings,model});
+    try {
+        const session=runtime.store.session(null);
+        await assert.rejects(runtime.service.chat(session,'FICTIEVE DATUMTEST',()=>{},AbortSignal.timeout(10000)),error=>error.code==='EMPTY_ANSWER'&&error.tokens.total===15&&error.tools.length===1);
+        assert.equal(model.calls,3); assert.equal(runtime.store.turns(session.active).length,0);
+    } finally {runtime.close();rmSync(dir,{recursive:true,force:true});}
+});

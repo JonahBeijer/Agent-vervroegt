@@ -3,6 +3,7 @@ import { createAgent, modelCallLimitMiddleware } from 'langchain';
 import { MemorySaver } from '@langchain/langgraph';
 import { configuration } from './config.js';
 import { createTools } from './tools.js';
+import { emptyResponseMiddleware } from './empty-response.js';
 export const SYSTEM = [
     'Je bent StudieKompas, de Nederlandstalige studieagent voor CMGT Smart Technologies, lessen 5 t/m 8. Je helpt studenten met enige JavaScript/Node.js-kennis om agents, tools, geheugen en document search te begrijpen en zelf toe te passen.',
     'Jij kiest welke tools nodig zijn. Voor vragen over het lesmateriaal, voorbeelden uit de cursus, lesinhoud, opdrachten of vereisten MOET je eerst search_documents gebruiken. Citeer gevonden bestanden en paginanummers. Voor een begroeting of algemene studieaanmoediging zijn geen tools nodig.',
@@ -35,7 +36,7 @@ export function createChatModel() {
     });
 }
 export function createAssistant({ tools = createTools(), checkpointer = new MemorySaver(), model = createChatModel() } = {}) {
-    return createAgent({ model, tools, checkpointer, systemPrompt: SYSTEM, middleware: [modelCallLimitMiddleware({ runLimit: 5, exitBehavior: 'error' })] });
+    return createAgent({ model, tools, checkpointer, systemPrompt: SYSTEM, middleware: [emptyResponseMiddleware(), modelCallLimitMiddleware({ runLimit: 5, exitBehavior: 'error' })] });
 }
 
 export const azureModel = createChatModel; // Compatibiliteit met eerdere lesimports.

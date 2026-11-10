@@ -109,3 +109,5 @@ npm run agent -- "Zoek via technology_news een actueel Nederlands technologieber
 De tweede test gebruikt NEWSDATA_API uit hetzelfde externe env-bestand. Modelcredentials alleen tellen niet als credentials voor een tool. Controleer de feitelijk gelogde toolstatus en het antwoord; een API-limiet of weigering is geen geslaagde live uitvoering. Brightspace-inlevering van Use Case Agent en de screencast moeten door de student worden afgerond.
 
 Het zijpaneel bevat uitsluitend gesprekken, een compact uitklapbaar documentenoverzicht, gebruikte bronnen en toolactiviteiten. Upload, verwijderen, export, verbindingsstatus, lesnavigatie en de gezamenlijke tokenteller staan niet meer in het zijpaneel. De startvragen en tokenmetadata bij chatberichten blijven beschikbaar.
+
+Bij een incidenteel leeg modelantwoord probeert de agent de modelstap maximaal één keer extra per gebruikersvraag. Beschikbare tokenmetadata van die poging telt mee. De bestaande toolresultaten blijven beschikbaar; de herstelcode voert de tools niet zelf opnieuw uit. Als ook herstel leeg blijft, wordt de ronde niet opgeslagen en verschijnt een fout. Zie les-5/empty-response.js en docs/controle.md.
