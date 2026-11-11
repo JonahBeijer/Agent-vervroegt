@@ -15,6 +15,7 @@ export function trackedTool(name, description, schema, action) {
         try {
             context.signal?.throwIfAborted();
             const result = await action(input, context);
+            if (name === 'technology_news') context.newsResult = result;
             event.status = result.error ? 'error' : 'done';
             event.summary = result.error || result.summary || 'Tool uitgevoerd';
             for (const source of result.sources || []) {
@@ -23,6 +24,7 @@ export function trackedTool(name, description, schema, action) {
             for (const anime of result.anime || []) context.anime.set(anime.id, anime);
             return result;
         } catch (error) {
+            if (name === 'technology_news') context.newsResult = { error: true };
             event.status = 'error';
             // Geen provider-URL of API-key uit een exception doorgeven.
             event.summary = error.name === 'AbortError' || context.signal?.aborted ? 'Aanvraag afgebroken.' : 'De externe bron is tijdelijk niet beschikbaar. Verzin geen vervangende resultaten.';

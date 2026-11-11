@@ -1,6 +1,7 @@
 import { createMiddleware } from 'langchain';
-import { isAIMessage } from '@langchain/core/messages';
+import { AIMessage, isAIMessage } from '@langchain/core/messages';
 import { runContext } from './context.js';
+import { newsAnswer } from './news-answer.js';
 export function messageText(message) {
     if (typeof message?.content === 'string') return message.content;
     return Array.isArray(message?.content) ? message.content.filter(block => block.type === 'text').map(block => block.text || '').join('\n') : '';
@@ -14,7 +15,13 @@ export function emptyResponseMiddleware() {
             const reason = result.response_metadata?.finish_reason;
             if ((reason && reason !== 'stop') || result.additional_kwargs?.refusal) return result;
             const context = runContext.getStore();
-            if (!context || context.emptyRecoveryUsed || context.signal?.aborted) return result;
+            if (!context || context.signal?.aborted) return result;
+            const answer = newsAnswer(context.newsResult);
+            if (answer) {
+                console.info('[agent model]', { issue: 'empty_response', action: 'show_news_tool_result' });
+                return new AIMessage({ id: result.id, content: answer, usage_metadata: result.usage_metadata, response_metadata: { ...result.response_metadata, answer_source: 'news_tool' } });
+            }
+            if (context.emptyRecoveryUsed) return result;
             // Eén extra modelaanvraag per gebruikersvraag; reeds uitgevoerde tools worden niet opnieuw uitgevoerd.
             context.emptyRecoveryUsed = true;
             (context.discardedModelMessages ||= []).push(result);
